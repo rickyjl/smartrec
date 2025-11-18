@@ -1,28 +1,88 @@
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Rec</title>
+    <title>Spotify Cluster Explorer</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 30px;
+        }
+        .song-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to SmartRec </h1>
-    <p>Music suggestions based on your mood! </p>
-    <label for="mood">Choose a mood:</label>
-    <select id="mood" name="selected_mood">
-      <option value="mood1"> 1 </option>
-      <option value="mood2"> 2 </option>
-      <option value="mood3"> 3 </option>
-      <option value="mood4"> 4 </option>
-      <option value="mood5"> 5 </option>
-      <option value="mood6"> 6 </option>
-      <option value="mood7"> 7 </option>
-      <option value="mood8"> 8 </option>
-      <option value="mood9"> 9 </option>
-      <option value="mood10"> 10 </option>
-      <option value="mood11"> 11 </option>
-      <option value="mood12"> 12 </option>
-    </select>
-    <button type="button">Find Songs!</button>
-    
+
+<h1>Spotify Song Cluster Explorer</h1>
+<p>Select a cluster and view 10 random songs.</p>
+
+<select id="clusterSelect">
+    <option value="" disabled selected>Select a cluster</option>
+</select>
+
+<button onclick="showSongs()">Show Songs</button>
+
+<h2>Results</h2>
+<div id="results"></div>
+
+<script>
+    let allSongs = [];
+
+    // Load JSON file
+    fetch("clustered_songs.json")
+        .then(response => response.json())
+        .then(data => {
+            allSongs = data;
+
+            // Populate dropdown
+            const dropdown = document.getElementById("clusterSelect");
+            for (let i = 0; i < 13; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = "Cluster " + i;
+                dropdown.appendChild(option);
+            }
+        });
+
+    function showSongs() {
+        const clusterID = parseInt(document.getElementById("clusterSelect").value);
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        if (isNaN(clusterID)) return;
+
+        // Filter songs by cluster
+        const clusterSongs = allSongs.filter(song => song.cluster === clusterID);
+
+        if (clusterSongs.length === 0) {
+            resultsDiv.innerHTML = "<p>No songs found for this cluster.</p>";
+            return;
+        }
+
+        // Randomly pick 10 songs
+        const randomSongs = clusterSongs
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 10);
+
+        // Display songs
+        randomSongs.forEach(song => {
+            const box = document.createElement("div");
+            box.className = "song-box";
+            box.innerHTML = `
+                <strong>${song.name}</strong><br>
+                Artist: ${song.artists}<br>
+                Valence: ${song.valence}<br>
+                Energy: ${song.energy}
+            `;
+            resultsDiv.appendChild(box);
+        });
+    }
+</script>
+
 </body>
 </html>
+
