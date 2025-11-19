@@ -13,6 +13,75 @@
             border-radius: 8px;
             margin-bottom: 10px;
         }
+                @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 30px;
+            text-align: center;
+            background: linear-gradient(135deg, #0d1b2a, #1b263b);
+            color: #e0e6ed;
+        }
+        
+        /* Title */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        /* Subtitle */
+        p {
+            font-size: 1.1rem;
+            opacity: 0.85;
+        }
+        
+        /* Dropdown + Button container */
+        select, button {
+            padding: 12px 18px;
+            margin: 10px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            background: #415a77;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        
+        /* Hover effects */
+        select:hover, button:hover {
+            background: #5f85a1;
+        }
+        
+        /* Results container */
+        #results {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Song box styling */
+        .song-box {
+            width: 80%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        
+        /* Hover glow */
+        .song-box:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
     </style>
 </head>
 <body>
