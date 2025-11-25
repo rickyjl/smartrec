@@ -3,18 +3,8 @@
 <head>
     <title>Spotify Cluster Explorer</title>
     <style>
-        body {
-            font-family: Arial;
-            margin: 30px;
-        }
-        .song-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-                @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
+
         body {
             font-family: 'Montserrat', sans-serif;
             margin: 0;
@@ -23,20 +13,20 @@
             background: linear-gradient(135deg, #0d1b2a, #1b263b);
             color: #e0e6ed;
         }
-        
+
         /* Title */
         h1 {
             font-size: 2.5rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
-        
+
         /* Subtitle */
         p {
             font-size: 1.1rem;
             opacity: 0.85;
         }
-        
+
         /* Dropdown + Button container */
         select, button {
             padding: 12px 18px;
@@ -49,57 +39,88 @@
             cursor: pointer;
             transition: 0.2s ease;
         }
-        
+
         /* Hover effects */
         select:hover, button:hover {
             background: #5f85a1;
         }
-        
-        /* Results container */
+
+        /* Results container - flex column, center children */
         #results {
             margin-top: 20px;
-            display: flex;
+            display: none;            /* hidden initially */
             flex-direction: column;
-            align-items: center;
+            align-items: center;      /* centers children horizontally */
+            justify-content: flex-start;
+            width: 100%;
         }
-        
-        /* Song box styling */
+
+        /* Results title hidden initially */
+        #resultsTitle {
+            display: none;
+            margin-top: 20px;
+        }
+
+        /* Song box styling - centered with auto margins */
         .song-box {
-            width: 80%;
-            max-width: 500px;
+            width: 90%;
+            max-width: 700px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 15px;
-            margin: 10px 0;
+            margin: 10px auto;          /* auto left/right keeps it centered */
             border-radius: 12px;
             backdrop-filter: blur(4px);
             transition: transform 0.2s ease, background 0.2s ease;
+            text-align: left;          /* keep text left-aligned inside the box */
         }
-        
+
         /* Hover glow */
         .song-box:hover {
             transform: translateY(-4px);
             background: rgba(255, 255, 255, 0.1);
         }
 
+        /* small responsive tweak */
+        @media (max-width: 480px) {
+            .song-box { width: 95%; padding: 12px; }
+            select, button { width: calc(100% - 40px); }
+        }
     </style>
 </head>
 <body>
 
 <h1>Spotify Song Cluster Explorer</h1>
-<p>Select a cluster and view 10 random songs.</p>
+<p>Select an emotion and view 10 random songs.</p>
 
 <select id="clusterSelect">
-    <option value="" disabled selected>Select a cluster</option>
+    <option value="" disabled selected>Select an emotion</option>
 </select>
 
 <button onclick="showSongs()">Show Songs</button>
 
-<h2>Results</h2>
+<h2 id="resultsTitle">Results</h2>
 <div id="results"></div>
 
 <script>
     let allSongs = [];
+
+    // These MUST match your Python emotion_map
+    const emotionList = [
+        "cheerful",
+        "calm",
+        "happy / upbeat",
+        "high energy",
+        "angry",
+        "sad",
+        "satisfied",
+        "upset",
+        "serene",
+        "mellow",
+        "surprised",
+        "excited",
+        "relaxed"
+    ];
 
     // Load JSON file
     fetch("clustered_songs.json")
@@ -107,33 +128,48 @@
         .then(data => {
             allSongs = data;
 
-            // Populate dropdown
+            // Populate dropdown with emotions
             const dropdown = document.getElementById("clusterSelect");
-            for (let i = 0; i < 13; i++) {
+            emotionList.forEach(emotion => {
                 const option = document.createElement("option");
-                option.value = i;
-                option.textContent = "Cluster " + i;
+                option.value = emotion;
+                // Capitalize first letter for nicer display
+                option.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
                 dropdown.appendChild(option);
-            }
+            });
+        })
+        .catch(err => {
+            console.error("Failed to load clustered_songs.json:", err);
+            const dropdown = document.getElementById("clusterSelect");
+            dropdown.innerHTML = '<option value="" disabled>Error loading data</option>';
         });
 
     function showSongs() {
-        const clusterID = parseInt(document.getElementById("clusterSelect").value);
+        const selectedEmotion = document.getElementById("clusterSelect").value;
         const resultsDiv = document.getElementById("results");
+        const resultsTitle = document.getElementById("resultsTitle");
+
+        // Show results section when button is clicked
+        resultsDiv.style.display = "flex";   // use flex so children are centered
+        resultsTitle.style.display = "block";
+
         resultsDiv.innerHTML = "";
 
-        if (isNaN(clusterID)) return;
+        if (!selectedEmotion) return;
 
-        // Filter songs by cluster
-        const clusterSongs = allSongs.filter(song => song.cluster === clusterID);
+        // Filter songs by emotion (fallback to lowercase compare in case JSON has different casing)
+        const emotionSongs = allSongs.filter(song => {
+            if (!song.emotion) return false;
+            return song.emotion.toLowerCase() === selectedEmotion.toLowerCase();
+        });
 
-        if (clusterSongs.length === 0) {
-            resultsDiv.innerHTML = "<p>No songs found for this cluster.</p>";
+        if (emotionSongs.length === 0) {
+            resultsDiv.innerHTML = "<p>No songs found for this emotion.</p>";
             return;
         }
 
-        // Randomly pick 10 songs
-        const randomSongs = clusterSongs
+        // Randomly pick up to 10 songs
+        const randomSongs = emotionSongs
             .sort(() => 0.5 - Math.random())
             .slice(0, 10);
 
@@ -142,16 +178,17 @@
             const box = document.createElement("div");
             box.className = "song-box";
             box.innerHTML = `
-                <strong>${song.name}</strong><br>
-                Artist: ${song.artists}<br>
-                Valence: ${song.valence}<br>
-                Energy: ${song.energy}
+                <strong>${song.track_name}</strong><br>
+                <em>Artist:</em> ${song.artists}<br>
+                <small>Valence: ${song.valence} • Energy: ${song.energy}</small>
             `;
             resultsDiv.appendChild(box);
         });
+
+        // Optional: scroll to results (smooth)
+        resultsTitle.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 </script>
 
 </body>
 </html>
-
